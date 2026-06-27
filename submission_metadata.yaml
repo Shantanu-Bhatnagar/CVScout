@@ -1,0 +1,77 @@
+
+team_name: "Fantastic Four"  
+
+primary_contact:
+  name: "Tatini Ghosh"
+  email: "tatinigh@gmail.com"   
+  phone: "+918918374604"        
+
+team_members:
+  - name: "Shantanu Bhatnagar"
+    email: "shantanu10.04bhat@gmail.com"
+    role: "LLM Developer"         
+  - name: "Vihaan Prashant Pai"
+    email: "vihaanpai20official@gmail.com"
+    role: "Data Cleaning and Preprocessing"
+  - name: "Hansika Reddy"
+    email: "hansikareddy015@gmail.com"
+    role: "Data Filtering and Extraction"
+  - name: "Tatini Ghosh"
+    email: "tatinigh@gmail.com"
+    role: "UI/UX and backend integration"
+
+
+github_repo: "https://github.com/Shantanu-Bhatnagar/Ai-Candidate-Ranker.git"
+
+sandbox_link: "https://huggingface.co/spaces/YOUR_USERNAME/redrob-ranker"
+
+
+reproduce_command: "python rank.py --candidates ./candidates.jsonl --out ./submission.csv"
+
+
+compute:
+  platform: "HP Victus"                    # Or: "AWS EC2 c5.4xlarge", "Local Linux box", etc.
+  cpu_cores: 8                                  # Number of CPU cores used
+  ram_gb: 16                                    # Available RAM in GB
+  python_version: "3.11.4"                      # python --version
+  os: "macOS 14.2"                              # Or "Ubuntu 22.04 LTS", etc.
+  uses_gpu_for_inference: false                 # Must be false — see compute constraints
+  has_network_during_ranking: false             # Must be false — no API calls during ranking
+  pre_computation_required: false               # true if you pre-compute embeddings or train models offline
+  pre_computation_time_minutes: 0               # Approximate, if applicable
+
+ai_tools_used:
+  - "Claude"        # e.g. for architecture discussion, code review
+  - "Gemini"  # e.g. for autocomplete
+  # Other options: "ChatGPT", "Cursor", "Gemini", "Codeium", "Other", "None"
+
+ai_usage_summary: |
+  Briefly describe how AI tools were used. Examples:
+  - "Used Claude for code review and architectural discussion. Used Copilot for autocomplete.
+     No candidate data was fed to any LLM."
+  - "Used ChatGPT to debug Python issues and Cursor for refactoring."
+  - "No AI tools used."
+
+# ============================================================================
+# Approach summary (optional but recommended)
+# ============================================================================
+methodology_summary: |
+methodology_summary: |
+  "Deterministic-probabilistic hybrid ranking engine designed to handle 100,000-candidate JSONL streams 
+  under zero-network, 5-minute compute restrictions. The pipeline processes raw records through a hardcoded 
+  anomaly detection layer, instantly pruning inconsistent timeline honeypots and keyword-stuffed profiles 
+  lacking technical domain alignment. Cleaned candidates are transformed into numeric feature matrices 
+  representing experience proximity, location matching, and a composite availability weight calculated 
+  from recruiter response metrics and June 2026 inactivity steps. A specialized LightGBM model outputs 
+  ordered scores with deterministic ID sorting to completely avoid rank collisions. The final 101-line CSV 
+  integrates context-specific, pre-computed reasoning vectors mapped via local key-value lookups.""
+
+# ============================================================================
+# Declarations
+# ============================================================================
+declarations:
+  read_submission_spec: true        # I have read submission_spec.md in full
+  code_is_original_work: true       # My code is my team's original work (using AI as a tool is fine)
+  no_collusion: true                # I have not coordinated my submission with other teams
+  honeypot_check_done: true       # OPTIONAL — set true if you explicitly checked for honeypots in your ranking
+  reproduction_tested: true         # I have tested that my reproduce_command runs end-to-end
