@@ -1,6 +1,6 @@
-# FitChex: Dual-Stage Machine Learning Candidate Ranking Engine
+# CVScout: Dual-Stage Machine Learning Candidate Ranking Engine
 
-FitChex is a high-performance, memory-bounded evaluation pipeline designed to ingest large-scale candidate datasets, filter out structural disqualifiers, and rank profiles using a locally trained gradient-boosted decision tree model.
+CVScout is a high-performance, memory-bounded evaluation pipeline designed to ingest large-scale candidate datasets, filter out structural disqualifiers, and rank profiles using a locally trained gradient-boosted decision tree model.
 
 The system operates entirely offline and executes within strict CPU performance limits. It evaluates candidate records by combining automated business-rule filtering, numerical feature extraction (experience gaps, hard skills matching, and behavioral metrics), and pre-computed language model justifications.
 
