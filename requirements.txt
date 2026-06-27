@@ -5,3 +5,5 @@ scikit-learn
 streamlit
 python-dotenv
 openai
+numpy
+scipy
