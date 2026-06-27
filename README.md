@@ -1,28 +1,28 @@
-# CVScout: High-Performance Candidate Evaluation Pipeline
+# FitChex: Dual-Stage Machine Learning Candidate Ranking Engine
 
-This repository contains the core architecture for a memory-bounded, CPU-optimized talent evaluation engine designed to ingest large-scale candidate datasets, analyze professional history semantically, and rank candidates based on a composite evaluation of text alignment and platform behavioral signals.
+FitChex is a high-performance, memory-bounded evaluation pipeline designed to ingest large-scale candidate datasets, filter out structural disqualifiers, and rank profiles using a locally trained gradient-boosted decision tree model.
 
-Unlike traditional resume screening tools that rely on fragile keyword filters, this system evaluates the underlying context of a candidate's profile against a target job description. The engine operates entirely locally, maximizing processing speed and eliminating external network runtime dependencies.
+The system operates entirely offline and executes within strict CPU performance limits. It evaluates candidate records by combining automated business-rule filtering, numerical feature extraction (experience gaps, hard skills matching, and behavioral metrics), and pre-computed language model justifications.
 
-## Technical Architecture and Optimization Features
+---
 
-The backend engine is engineered to sustain heavy data volumes under strict execution constraints:
+## Technical Architecture
 
-* **Local Sparse Vectorization:** To bypass the compute overhead of deep transformer models on standard hardware, the engine processes textual data using a stateless token hashing vectorizer paired with sparse matrix dot products. Semantic alignment is computed locally on CPU architectures without requiring GPU acceleration or third-party API keys.
-* **Bounded-Memory Streaming:** Ingesting large JSON structures entirely into memory presents severe risks of system out-of-memory crashes. This pipeline utilizes a rolling buffer decoder to parse and evaluate records iteratively, maintaining a completely flat and stable memory footprint regardless of the file size.
-* **Deterministic Tie-Breaking:** The sorting layer enforces strict mathematical consistency. Profiles are sorted descending by their final composite evaluation score. In the event of an identical score, a secondary ascending alphabetical sort is applied to the unique candidate ID to settle rankings definitively.
+The project utilizes a decoupled two-stage architecture to maximize evaluation accuracy while respecting sandboxed platform limitations:
+
+1. **Offline Pre-computation Layer:** Runs locally to evaluate historical datasets. A large language model analyzes raw profile text to generate qualitative hiring justifications, which are saved in a key-value lookup file (`reasoning_cache.json`). Simultaneously, a LightGBM regressor model is trained on structural and behavioral features to learn optimal candidate alignment, exporting a lightweight serialized brain (`ranker.pkl`).
+2. **Production Sandbox Runtime (`rank.py`):** The script executed by the evaluation platform. It streams incoming candidates line-by-line to guarantee a flat memory footprint, enforces automated rule-based filters to eliminate honeypots, processes numerical features, computes suitability scores using the LightGBM model, and executes a deterministic tie-breaking sort.
+
+---
 
 ## Tech Stack
 
-The application relies entirely on a lightweight, performant scientific computing and data analysis stack:
+* **Core Runtime:** Python 3.8+
+* **Machine Learning & Inference:** LightGBM, Scikit-learn, Pickle
+* **Data Processing & Array Math:** NumPy, Pandas
+* **Interface & Visualization:** Streamlit
 
-* **Python 3.8+**: Core runtime environment.
-* **scikit-learn**: Stateless text tokenization, hashing, and feature extraction via `HashingVectorizer`.
-* **SciPy**: Efficient allocation and dot-product execution via Compressed Sparse Row (`csr_matrix`) structures.
-* **NumPy**: High-speed, vectorized array operations for score blending.
-* **Pandas**: Structured dataset management, alignment filtering, and tabular sorting.
-* **Streamlit**: Light, high-performance web interface for recruiter interaction and data visualization.
-
+---
 
 ## Directory Layout
 
@@ -30,64 +30,65 @@ The application relies entirely on a lightweight, performant scientific computin
 Ai-Candidate-Ranker/
 │
 ├── data/
-│   ├── raw_resumes/            # Location for candidate JSON source data
-│   └── job_description.txt     # Plain text file containing the target job description
+│   ├── raw_resumes/            # Source location for candidate datasets
+│   └── job_description.txt     # Target role requirements in plain text
 │
 ├── data_layer/
-│   └── extractor.py            # Iterative JSON stream reader and text cleaning scripts
+│   └── filter_candidates.py    # Hard filter, honeypot detection, and stream validation
 │
 ├── ai_engine/
-│   └── rank.py                 # Core local text vectorization and hybrid scoring engine
+│   ├── rank.py                 # Sandbox execution engine loaded with the trained model
+│   ├── ranker.pkl              # Serialized LightGBM scoring model
+│   └── reasoning_cache.json    # Pre-computed LLM hiring justifications lookup table
 │
 ├── ui_layer/
-│   └── app.py                  # Streamlit interface for recruiter visualization
+│   └── app.py                  # Streamlit visual interface for recruiter interaction
 │
-├── requirements.txt            # Project dependencies and scientific library versions
+├── requirements.txt            # System dependencies and versions
 └── README.md                   # System documentation
 
 ```
 
 ---
 
-## Setup and Installation
+## Installation and Setup
 
-### 1. Environment Configuration
-
-Install the required data processing and text analysis dependencies inside your environment:
+Install the required data engineering and machine learning dependencies inside your Python environment:
 
 ```bash
 pip install -r requirements.txt
 
 ```
 
-### 2. Execution and Usage
+---
 
-The main ranking script is executed via the command line. You can customize the evaluation weights dynamically using the execution flags:
+## Usage and Implementation
+
+The production runtime engine executes entirely via the command line interface. It ingests the raw candidate data stream, scores the profiles using the local model, attaches the cached justifications, and writes out the finalized shortlist.
+
+Run the execution pipeline using the following command:
 
 ```bash
-python ai_engine/rank.py \
-    --candidates data/raw_resumes/candidates.json \
-    --job-description data/job_description.txt \
-    --output ranked_output.csv \
-    --alpha 0.6 \
-    --chunk-size 5000
+python rank.py --candidates ./candidates.jsonl --out ./submission.csv
 
 ```
 
-### Command Parameters:
+### Operational Execution Flow inside `rank.py`:
 
-* `--candidates`: Path to the raw candidate source dataset file.
-* `--job-description`: Path to the raw text file containing the target role parameters.
-* `--output`: Target path and filename for the compiled evaluation metrics.
-* `--alpha`: The scoring weight balance ratio. A setting of `0.6` assigns a 60 percent mathematical weight to semantic text alignment and a 40 percent weight to behavioral platform signals.
-* `--chunk-size`: The batch limit for streaming records into memory during a single calculation loop.
+* **Asset Loading:** Loads `ranker.pkl` and maps `reasoning_cache.json` into memory instantly.
+* **Line-by-Line Stream Ingestion:** Streams the candidates to prevent system memory spikes.
+* **Honeypot and Filter Interception:** Evaluates experience out-of-bounds, job-hopping histories, and consulting-firm exclusions. Failed profiles are short-circuited to a `0.0` score.
+* **LightGBM Prediction:** Passing profiles are converted to numerical matrices and evaluated by the model.
+* **Deterministic Sorting:** Orders candidates descending by score, applying an ascending alphabetical sort on `candidate_id` as a definitive tiebreaker.
+* **Justification Mapping:** Slices the top 100 entries, pulls their corresponding sentences from the reasoning cache, and saves the file.
 
 ---
 
 ## Output Data Schema
 
-The scoring script outputs a standardized, structured CSV file designed for immediate parsing by downstream visualization UI components or testing frameworks. The exported data contains the following explicit attributes:
+The generated `submission.csv` file targets exactly the top 100 ranked candidates and contains the following structured attributes:
 
-* `candidate_id` (String): The unique identification token assigned to the candidate profile.
-* `score` (Float): The computed composite evaluation score, rounded to 4 decimal places.
-* `rank` (Integer): The final sorted sequential position on the talent leaderboard after primary scores and deterministic tie-breaker constraints are resolved.
+* `candidate_id` (String): The unique identification token assigned to the profile.
+* `score` (Float): The composite evaluation metric predicted by the model, rounded to 4 decimal places.
+* `rank` (Integer): The final ordered sequential position on the leaderboard.
+* `reasoning` (String): The pre-computed 1-2 sentence factual hiring justification detailing specific skills, years of experience, or operational gaps.
