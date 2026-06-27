@@ -1,6 +1,5 @@
 .env
 __pycache__/
-*.pyc
 data/raw_resumes/
 .streamlit/
 node_modules/
