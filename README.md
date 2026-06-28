@@ -27,25 +27,22 @@ The project utilizes a decoupled two-stage architecture to maximize evaluation a
 ## Directory Layout
 
 ```text
-Ai-Candidate-Ranker/
+CVScout/
 │
-├── data/
-│   ├── raw_resumes/            # Source location for candidate datasets
-│   └── job_description.txt     # Target role requirements in plain text
+├── Filtering_Script/
+│   └── filter_candidates.py 
+|   └── cleaningFile.py   
 │
-├── data_layer/
-│   └── filter_candidates.py    # Hard filter, honeypot detection, and stream validation
+├── LLM_engine/
+│   ├── rank.py                
+│   ├── ranker.pkl              
+│   └── reasoning_cache.json    
 │
-├── ai_engine/
-│   ├── rank.py                 # Sandbox execution engine loaded with the trained model
-│   ├── ranker.pkl              # Serialized LightGBM scoring model
-│   └── reasoning_cache.json    # Pre-computed LLM hiring justifications lookup table
+├── UI_layer/
+│   └── dashboard.py                
 │
-├── ui_layer/
-│   └── app.py                  # Streamlit visual interface for recruiter interaction
-│
-├── requirements.txt            # System dependencies and versions
-└── README.md                   # System documentation
+├── requirements.txt           
+└── README.md                 
 
 ```
 
