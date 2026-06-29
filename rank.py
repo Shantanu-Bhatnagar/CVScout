@@ -5,6 +5,7 @@ import gzip
 import heapq
 import json
 import os 
+import profile
 import re
 import subprocess
 import sys
@@ -18,8 +19,10 @@ CONSULTING_FIRMS = {
 }
 
 TIER1_CITIES = {
-    "kolkata","bangalore", "bengaluru", "hyderabad", "mumbai", "chennai", "delhi",
-    "new delhi", "delhi ncr", "ncr", "gurgaon", "gurugram",
+    "kolkata", "bangalore", "bengaluru", "hyderabad", "mumbai", "chennai",
+    "delhi", "new delhi", "delhi ncr", "ncr", "gurgaon", "gurugram",
+    "noida",  # already in Pune/Noida check but add here as fallback
+    "kochi", "cochin", "jaipur", "ahmedabad", "bhubaneswar",
 }
 
 CORE_AI_KEYWORDS = [
@@ -244,10 +247,10 @@ def location_score(location, willing_to_relocate):
     if "noida" in loc or "pune" in loc:
         return 1.0
     if any(city in loc for city in TIER1_CITIES):
-        return 0.6
+        return 0.85   # was 0.6 — JD explicitly welcomes these cities
     if willing_to_relocate:
-        return 0.35
-    return 0.1
+        return 0.55   # was 0.35 — willing to relocate is a real positive signal
+    return 0.2        # was 0.1 — don't completely bury unknown locations
 
 
 def experience_fit_score(total_years):
@@ -290,12 +293,20 @@ def activity_factor(last_active_date_str, reference_date):
 def behavioral_modifier(redrob_signals):
     response_rate = safe_float(redrob_signals.get("recruiter_response_rate"), 0.0)
     completeness = safe_float(redrob_signals.get("profile_completeness_score"), 0.0) / 100.0
+    interview_completion = safe_float(redrob_signals.get("interview_completion_rate"), 0.7)
     open_to_work = bool(redrob_signals.get("open_to_work_flag", False))
-    modifier = 0.5 + 0.35 * response_rate + 0.15 * completeness
+
+    # response_rate is the dominant availability signal per the JD
+    modifier = (
+        0.50 * response_rate
+        + 0.25 * interview_completion
+        + 0.15 * completeness
+        + 0.10  # small base floor
+    )
     if open_to_work:
         modifier += 0.05
-    if response_rate <= 0.05:
-        modifier *= 0.4
+    if response_rate <= 0.10:
+        modifier *= 0.5   # hard availability penalty, not just <= 0.05
     return max(0.0, min(modifier, 1.15))
 
 
@@ -360,7 +371,18 @@ def evaluate_candidate(candidate, reference_date):
     framework_only = ("langchain" in text_blob) and not systems_signal and len(matched_core_keywords) <= 2
     cv_speech_robotics = bool(matched_keywords(text_blob, CV_SPEECH_ROBOTICS_KEYWORDS))
     nlp_ir_signal = bool(matched_keywords(text_blob, NLP_IR_KEYWORDS))
-    domain_misaligned = cv_speech_robotics and not nlp_ir_signal
+
+    # Check if CV/speech is the PRIMARY identity (current title, not just any career mention)
+    title_lower = str(profile.get("current_title") or "").lower()
+    cv_primary_title = any(kw in title_lower for kw in [
+        "computer vision", "vision engineer", "object detection",
+        "robotics", "speech", "asr"
+    ])
+    # Count NLP/IR keywords — a single "bert" in skills isn't enough crossover
+    nlp_ir_depth = len(matched_keywords(text_blob, NLP_IR_KEYWORDS))
+    domain_misaligned = cv_speech_robotics and (cv_primary_title or (not nlp_ir_signal)) or (
+    cv_primary_title and nlp_ir_depth < 3
+    )
     job_hopper = len(career_history) >= 2 and avg_tenure < 1.6
     freelance_share = freelance_ratio(career_history)
     mostly_freelance = 0.6 <= freelance_share < 0.8

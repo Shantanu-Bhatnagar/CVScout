@@ -9,7 +9,7 @@ An automated, high-performance talent evaluation pipeline engineered for the Red
 To reproduce the top-100 submission leaderboard inside the evaluation sandbox container, execute the following command from the repository root directory:
 
 ```bash
-python rank.py --candidates ./Data/candidates.jsonl --out ./submission.csv
+python rank.py --candidates ./Data/candidates.jsonl --out ./fantastic_4.csv
 ```
 
 *Note: The script automatically detects input extensions (`.jsonl`, `.csv`, `.jsonl.gz`, `.csv.gz`) and streams rows through the entire multi-stage pipeline seamlessly.*
