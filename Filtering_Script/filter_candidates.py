@@ -1,42 +1,29 @@
 import json
 from datetime import datetime, date
 
-# ─────────────────────────────────────────────────────────────────────────────
-# SETUP — change these if your filenames are different
-# ─────────────────────────────────────────────────────────────────────────────
+
 INPUT_FILE  = "candidates_cleaned__20.jsonl"
 OUTPUT_FILE = "candidates_filtered.jsonl"
 REJECTED_FILE = "candidates_rejected.jsonl"
 
-# ─────────────────────────────────────────────────────────────────────────────
-# CONSTANTS from the JD
-# ─────────────────────────────────────────────────────────────────────────────
-
-# JD explicitly names these consulting firms as disqualifiers
 CONSULTING_FIRMS = [
     "tcs", "tata consultancy services", "infosys", "wipro", "accenture",
     "cognizant", "capgemini", "hcl", "tech mahindra", "mphasis",
     "hexaware", "ltimindtree", "l&t infotech", "coforge", "niit technologies"
 ]
 
-# JD: "People whose primary expertise is CV, speech, robotics without NLP/IR"
 CV_SPEECH_SKILLS = [
     "computer vision", "object detection", "image classification", "image segmentation",
     "speech recognition", "speech synthesis", "tts", "asr", "robotics", "ros",
     "autonomous vehicles", "lidar", "slam"
 ]
 
-# Skills that show real NLP/IR exposure (redeems a CV/speech candidate)
 NLP_IR_SKILLS = [
     "nlp", "natural language", "information retrieval", "text classification",
     "embedding", "vector search", "retrieval", "ranking", "search", "bert",
     "transformer", "llm", "rag", "semantic search", "question answering",
     "named entity", "sentiment", "text mining"
 ]
-
-# ─────────────────────────────────────────────────────────────────────────────
-# HELPER FUNCTIONS
-# ─────────────────────────────────────────────────────────────────────────────
 
 def months_since(date_str):
     """How many months ago was this date?"""
@@ -65,9 +52,7 @@ def total_experience_years(career_history):
     months = sum(j.get("duration_months") or 0 for j in career_history)
     return months / 12
 
-# ─────────────────────────────────────────────────────────────────────────────
-# FILTER CHECKS — each returns (failed: bool, reason: str)
-# ─────────────────────────────────────────────────────────────────────────────
+
 
 def check_experience_range(record):
     """
@@ -135,7 +120,7 @@ def check_consulting_only(record):
     for company in companies:
         is_consulting = any(firm in company for firm in CONSULTING_FIRMS)
         if not is_consulting:
-            return False, ""  # at least one non-consulting job → keep
+            return False, ""  
     return True, "Entire career at consulting firms only (TCS/Infosys/Wipro etc.)"
 
 def check_pure_research(record):
@@ -190,13 +175,10 @@ def check_cv_speech_only(record):
 
     has_cv_speech = any(any(k in s for k in CV_SPEECH_SKILLS) for s in skills)
     if not has_cv_speech:
-        # also check description
         has_cv_speech = any(k in desc for k in CV_SPEECH_SKILLS)
-
     if not has_cv_speech:
-        return False, ""  # not a CV/speech person at all → fine
+        return False, ""  
 
-    # they do have CV/speech — check if they ALSO have NLP/IR to redeem
     has_nlp_ir = any(any(k in s for k in NLP_IR_SKILLS) for s in skills)
     if not has_nlp_ir:
         has_nlp_ir = any(k in desc for k in NLP_IR_SKILLS)
@@ -222,9 +204,8 @@ def check_wrapper_only_ai(record):
 
     all_wrappers_recent = all(s.get("duration_months", 99) < 12 for s in wrapper_skills)
     if not all_wrappers_recent:
-        return False, ""  # has been using these tools for a while → not just trend-chasing
-
-    # check for real ML skills
+        return False, "" 
+  
     real_ml = [s for s in skills if any(
         x in s.get("name", "").lower()
         for x in ["embedding", "retrieval", "vector", "ranking", "nlp", "transformer",
@@ -282,10 +263,6 @@ def check_verified_contact(record):
         return True, "Neither email nor phone is verified — unreachable"
     return False, ""
 
-# ─────────────────────────────────────────────────────────────────────────────
-# MASTER FILTER — runs all checks in order
-# ─────────────────────────────────────────────────────────────────────────────
-
 ALL_CHECKS = [
     check_experience_range,
     check_not_open_to_work,
@@ -309,10 +286,6 @@ def should_keep(record):
         if failed:
             return False, reason
     return True, "PASS"
-
-# ─────────────────────────────────────────────────────────────────────────────
-# RUN
-# ─────────────────────────────────────────────────────────────────────────────
 
 kept = 0
 rejected = 0

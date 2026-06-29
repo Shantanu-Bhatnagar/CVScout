@@ -4,3 +4,4 @@ data/raw_resumes/
 .streamlit/
 node_modules/
 .DS_Store
+Data/
