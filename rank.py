@@ -527,6 +527,7 @@ def discover_pipeline_output(fallback_path):
                         return p
     return fallback_path
 
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--candidates", required=True)
