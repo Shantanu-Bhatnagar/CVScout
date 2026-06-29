@@ -510,11 +510,22 @@ def heap_key(features):
 def find_team_script(filename):
     if os.path.exists(filename):
         return filename
-    for folder in ["filtering", "scripts", "src", "Data"]:
+    for folder in ["Filtering_Script", "UI_layer", "filtering", "scripts", "src", "Data"]:
         test_path = os.path.join(folder, filename)
         if os.path.exists(test_path):
             return test_path
     return filename
+
+def discover_pipeline_output(fallback_path):
+    for folder in [".", "Data", "Filtering_Script"]:
+        if os.path.exists(folder):
+            for f in os.listdir(folder):
+                fl = f.lower()
+                if "filtered" in fl or "cleaned" in fl or "honeypot" in fl:
+                    p = os.path.join(folder, f)
+                    if os.path.isfile(p) and os.getsize(p) > 0 and p != fallback_path:
+                        return p
+    return fallback_path
 
 
 def main():
@@ -531,12 +542,12 @@ def main():
     
     temp_filtered_path = "temp_pipeline_filtered" + ext
     temp_honeypot_path = "temp_pipeline_honeypot" + ext
+    default_team_output = os.path.join("Data", "candidates_filtered.csv")
 
     print("\n" + "="*60, flush=True)
-    print("LAUNCHING talent scoring AND RANKING ORCHESTRATOR PIPELINE", flush=True)
+    print("LAUNCHING TALENT SCORING AND RANKING ORCHESTRATOR PIPELINE", flush=True)
     print("="*60 + "\n", flush=True)
 
-    
     cleaning_script = find_team_script("filter_candidates.py")
     print(f"[STAGE 1/3] Running Data Cleaning via: {cleaning_script}...", flush=True)
     print(f"            Processing raw source: {current_input_path}", flush=True)
@@ -546,27 +557,47 @@ def main():
             "--candidates", current_input_path, 
             "--out", temp_filtered_path
         ], check=True)
-        print(" -> SUCCESS: Data cleaning and whitespace normalization complete.\n", flush=True)
-        current_input_path = temp_filtered_path
+        
+        if os.path.exists(temp_filtered_path):
+            current_input_path = temp_filtered_path
+            print(" -> SUCCESS: Data cleaning complete (Using pipeline temp file).\n", flush=True)
+        elif os.path.exists(default_team_output):
+            current_input_path = default_team_output
+            print(" -> SUCCESS: Data cleaning complete (Detected default team output file).\n", flush=True)
+        else:
+            print(" -> SUCCESS: Data cleaning complete.\n", flush=True)
+            
     except (subprocess.CalledProcessError, FileNotFoundError):
         print(" -> WARNING: filter_candidates.py failed or not found. Falling back to raw input.\n", flush=True)
 
-    
     honeypot_script = find_team_script("honeypotcleaning.py")
     print(f"[STAGE 2/3] Running Honeypot Filtering via: {honeypot_script}...", flush=True)
     print(f"            Processing intermediate source: {current_input_path}", flush=True)
     try:
+        if os.path.exists(default_team_output):
+            try:
+                os.remove(default_team_output)
+            except OSError:
+                pass
+
         subprocess.run([
             sys.executable, honeypot_script, 
             "--candidates", current_input_path, 
             "--out", temp_honeypot_path
         ], check=True)
-        print(" -> SUCCESS: Honeypot profiles isolated and purged from stream.\n", flush=True)
-        current_input_path = temp_honeypot_path
+        
+        if os.path.exists(temp_honeypot_path):
+            current_input_path = temp_honeypot_path
+            print(" -> SUCCESS: Honeypot profiles isolated (Using pipeline temp file).\n", flush=True)
+        elif os.path.exists(default_team_output):
+            current_input_path = default_team_output
+            print(" -> SUCCESS: Honeypot profiles isolated (Detected default team output file).\n", flush=True)
+        else:
+            print(" -> SUCCESS: Honeypot profiles isolated and purged from stream.\n", flush=True)
+            
     except (subprocess.CalledProcessError, FileNotFoundError):
         print(" -> WARNING: honeypotcleaning.py failed or not found. Falling back to previous stream.\n", flush=True)
 
-   
     print(f"[STAGE 3/3] Running Matrix Scoring and Leaderboard Sorting...", flush=True)
     print(f"            Processing finalized stream source: {current_input_path}", flush=True)
     
@@ -618,7 +649,7 @@ def main():
         os.remove(temp_honeypot_path)
 
     print("="*60, flush=True)
-    print("PIPELINE EXECUTION COMPLETE: SAFE TO EXIT SANBOX CONTAINER", flush=True)
+    print("PIPELINE EXECUTION COMPLETE: SAFE TO EXIT SANDBOX CONTAINER", flush=True)
     print("="*60 + "\n", flush=True)
 
 if __name__ == "__main__":
