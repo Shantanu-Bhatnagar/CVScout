@@ -1,6 +1,6 @@
 # CVScout: Advanced Talent Ranking & Pipeline Orchestrator
 
-An automated, high-performance talent evaluation pipeline engineered for the Redrob Hackathon v4 to isolate elite **Senior AI Core Skills Specialists**. The system operates with zero external network dependencies, memory-bounded stream processing, and custom programmatic safeguards to parse, filter, and score dense candidate matrices under strict runtime limitations.
+An automated, high-performance talent evaluation pipeline engineered for the Redrob Hackathon v4 to isolate elite **Senior AI Engineer**. The system operates with zero external network dependencies, memory-bounded stream processing, and custom programmatic safeguards to parse, filter, and score dense candidate matrices under strict runtime limitations.
 
 ---
 
@@ -67,7 +67,8 @@ pip install -r requirements.txt
 * **`sentence-transformers` / `scikit-learn`**: Core components supporting local vector evaluations and ML modeling.
 * **`pdfplumber`**: Specialized text extraction layer for secondary profile attachment parsing.
 * **`python-dotenv` / `openai` / `ollama`**: Infrastructure hooks maintaining local LLM caching and environmental configurations.
-
+##  Live Demo
+You can access the live application here: [CVScout Streamlit App](https://cvscout.streamlit.app)
 ---
 
 ## Team Metadata
