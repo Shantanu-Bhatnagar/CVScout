@@ -67,10 +67,10 @@ pip install -r requirements.txt
 * **`sentence-transformers` / `scikit-learn`**: Core components supporting local vector evaluations and ML modeling.
 * **`pdfplumber`**: Specialized text extraction layer for secondary profile attachment parsing.
 * **`python-dotenv` / `openai` / `ollama`**: Infrastructure hooks maintaining local LLM caching and environmental configurations.
-##  Live Demo
-You can access the live application here: [CVScout Streamlit App](https://cvscout.streamlit.app)
----
 
+---
+## Live Demo
+You can access the live application here: [CVScout Streamlit App](https://cvscout.streamlit.app)
 ## Team Metadata
 
 * **Team Name:** Fantastic_4
