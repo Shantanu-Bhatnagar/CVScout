@@ -46,7 +46,7 @@ CVScout/
 
 CVScout handles talent matching using an end-to-end multi-stage pipeline designed to satisfy real-world recruiting low-latency requirements:
 
-1. **Automated Pipeline Orchestration:** `rank.py` acts as the master execution shell. Upon execution, it invokes Vihaan's `filter_candidates.py` for text normalization and subsequently feeds those records into Hansika's `honeypotcleaning.py` to strip out synthetic profiles before the core ranking loop begins.
+1. **Automated Pipeline Orchestration:** `rank.py` acts as the master execution shell. Upon execution, it invokes `filter_candidates.py` for text normalization and subsequently feeds those records into  `honeypotcleaning.py` to strip out synthetic profiles before the core ranking loop begins.
 2. **Deterministic Integrity Guards:** Profiles are validated against a strict 5–9 years experience window. Trajectories outside this boundary, non-technical disciplines, or freelance-dominated histories are immediately isolated and assigned a hard-fail score of `0.0000`.
 3. **Soft Weighting Matrix:** Eligible profiles are evaluated using an objective heuristic formula mapping technical match density (45%), city proximity to Noida or Pune (20%), target experience matching (20%), and recruiter response rates (15%). Multiplier penalties automatically downgrade the scores of job hoppers, IT consulting-only backgrounds, and framework-only enthusiasts.
 4. **Stagnation Elimination & Score Decay:** To prevent flat or identical saturated scores, a continuous mathematical tiebreaker sequences profiles granularly. The final top 100 entries are distributed down a linear decay slope from `0.9950` to `0.4000` to enforce strict monotonic progression.
@@ -80,5 +80,5 @@ You can access the live application here: [CVScout Streamlit App](https://cvscou
   * Shantanu Bhatnagar
   * Tatini Ghosh
   * Vihaan Pai
-* **Compute Environment Summary:** Windows 11, Core i7, 16GB RAM, Python 3.11
+* **Compute Environment Summary:** Windows 11, Core i5, 16GB RAM, Python 3.11
 * **AI Tools Declared:** Claude, Gemini
