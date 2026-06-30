@@ -3,7 +3,7 @@ pandas
 sentence-transformers
 scikit-learn
 streamlit
-python-dotenv
-openai
+ollama(Llama3)
 numpy
 scipy
+Huggingface(all-MiniLM-L6-v2)
