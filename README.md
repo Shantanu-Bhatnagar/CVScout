@@ -81,4 +81,4 @@ You can access the live application here: [CVScout Streamlit App](https://cvscou
   * Tatini Ghosh
   * Vihaan Pai
 * **Compute Environment Summary:** Windows 11, Core i7, 16GB RAM, Python 3.11
-* **AI Tools Declared:** Claude
+* **AI Tools Declared:** Claude, Gemini
