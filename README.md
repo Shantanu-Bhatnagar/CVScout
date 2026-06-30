@@ -67,7 +67,7 @@ pip install -r requirements.txt
 * **`streamlit`**: Powering the sandbox web interface for small-sample verification.
 * **`sentence-transformers` / `scikit-learn`**: Core components supporting local vector evaluations and ML modeling.
 * **`pdfplumber`**: Specialized text extraction layer for secondary profile attachment parsing.
-* **`python-dotenv` / `openai` / `ollama`**: Infrastructure hooks maintaining local LLM caching and environmental configurations.
+* **`Huggingface(all-MiniLM-L6-v2)` /  `ollama(Llama3)`**: For math, ranking, representation and summary.
 
 ---
 ## Live Demo
