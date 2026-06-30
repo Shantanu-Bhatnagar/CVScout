@@ -23,7 +23,7 @@ team_members:
 
 github_repo: "https://github.com/Shantanu-Bhatnagar/Ai-Candidate-Ranker.git"
 
-sandbox_link: "(https://cvscout.streamlit.app)"
+sandbox_link: "https://cvscout.streamlit.app"
 
 
 reproduce_command: "python rank.py --candidates ./Data/candidates.jsonl --out ./fantastic_4.csv"
